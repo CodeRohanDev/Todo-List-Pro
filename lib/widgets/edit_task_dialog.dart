@@ -36,10 +36,13 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           Text('Set Progress', style: TextStyle(fontSize: 16)),
           Slider(
             value: _progress,
+            min: widget.task.progress,
             onChanged: (newProgress) {
-              setState(() {
-                _progress = newProgress;
-              });
+              if (newProgress >= widget.task.progress) {
+                setState(() {
+                  _progress = newProgress;
+                });
+              }
             },
             divisions: 20,
             label: "${(_progress * 100).round()}%",
@@ -57,10 +60,6 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
           onPressed: () {
             Provider.of<TaskProvider>(context, listen: false)
                 .updateTaskProgress(widget.task, _progress);
-            if (_progress == 1.0) {
-              Provider.of<TaskProvider>(context, listen: false)
-                  .toggleTaskStatus(widget.task);
-            }
             Navigator.of(context).pop();
           },
           style: ElevatedButton.styleFrom(

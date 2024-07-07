@@ -57,19 +57,24 @@ class TaskTile extends StatelessWidget {
           children: [
             Checkbox(
               value: task.isDone,
-              onChanged: (value) {
-                Provider.of<TaskProvider>(context, listen: false)
-                    .toggleTaskStatus(task);
-              },
+              onChanged: task.isDone
+                  ? null // Disable the checkbox if the task is done
+                  : (value) {
+                      Provider.of<TaskProvider>(context, listen: false)
+                          .toggleTaskStatus(task);
+                    },
             ),
             IconButton(
               icon: Icon(Icons.edit),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) => EditTaskDialog(task: task),
-                );
-              },
+              onPressed: task.isDone
+                  ? null // Disable the edit button if the task is done
+                  : () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            EditTaskDialog(task: task),
+                      );
+                    },
             ),
           ],
         ),

@@ -23,8 +23,14 @@ class TaskProvider with ChangeNotifier {
   }
 
   void updateTaskProgress(Task task, double progress) {
-    task.progress = progress;
-    notifyListeners();
+    if (progress >= task.progress) {
+      // Ensure progress can only be increased
+      task.progress = progress;
+      if (progress == 1.0) {
+        task.isDone = true; // Mark task as done if progress is 100%
+      }
+      notifyListeners();
+    }
   }
 
   void _sortTasks() {
