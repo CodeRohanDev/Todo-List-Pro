@@ -1,43 +1,39 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
 import 'package:todo_list_pro/models/task.dart';
 
-class TaskProvider with ChangeNotifier {
-  List<Task> _tasks = [];
+class TaskProvider extends ChangeNotifier {
+  Box<Task> _taskBox = Hive.box<Task>('tasks');
 
-  List<Task> get tasks => _tasks;
+  List<Task> get tasks => _taskBox.values.toList();
+
+  List<Task> get outgoingTasks =>
+      tasks.where((task) => !task.isCompleted && !task.isExpired).toList();
+
+  List<Task> get completedTasks =>
+      tasks.where((task) => task.isCompleted).toList();
+
+  List<Task> get expiredTasks =>
+      tasks.where((task) => !task.isCompleted && task.isExpired).toList();
 
   void addTask(Task task) {
-    _tasks.add(task);
-    _sortTasks();
+    _taskBox.add(task);
     notifyListeners();
   }
 
-  void removeTask(Task task) {
-    _tasks.remove(task);
-    notifyListeners();
-  }
-
-  void toggleTaskStatus(Task task) {
-    task.isDone = !task.isDone;
+  void updateTask(Task task) {
+    task.save();
     notifyListeners();
   }
 
   void updateTaskProgress(Task task, double progress) {
-    if (progress >= task.progress) {
-      // Ensure progress can only be increased
-      task.progress = progress;
-      if (progress == 1.0) {
-        task.isDone = true; // Mark task as done if progress is 100%
-      }
-      notifyListeners();
-    }
+    task.progress = progress;
+    task.save();
+    notifyListeners();
   }
 
-  void _sortTasks() {
-    _tasks.sort((a, b) {
-      if (a.isPriority && !b.isPriority) return -1;
-      if (!a.isPriority && b.isPriority) return 1;
-      return a.dateTime.compareTo(b.dateTime);
-    });
+  void deleteTask(Task task) {
+    task.delete();
+    notifyListeners();
   }
 }

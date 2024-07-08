@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously, prefer_const_constructors, curly_braces_in_flow_control_structures, library_private_types_in_public_api, use_key_in_widget_constructors
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list_pro/models/task.dart';
 import 'package:todo_list_pro/providers/task_provider.dart';
@@ -16,72 +19,62 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      title:
-          Text('Add New Task', style: TextStyle(fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _taskController,
-              decoration: InputDecoration(
-                labelText: 'Task Title',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+      title: Text('Add New Task'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _taskController,
+            decoration: InputDecoration(labelText: 'Task Title'),
+          ),
+          SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    _selectedDateTime = await _selectDateTime(context);
+                    setState(() {}); // Update state after selecting date
+                  },
+                  child: Text(_selectedDateTime == null
+                      ? 'Select Date & Time'
+                      : 'Change Date & Time'),
                 ),
               ),
+            ],
+          ),
+          if (_selectedDateTime != null) // Display selected date and time
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Selected Date & Time: ${DateFormat('dd-MM-yyyy HH:mm').format(_selectedDateTime!)}',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            SizedBox(height: 15),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      _selectedDateTime = await _selectDateTime(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      _selectedDateTime == null
-                          ? 'Select Date & Time'
-                          : '${_selectedDateTime!.toLocal()}'.split(' ')[0],
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Column(
-                  children: [
-                    Checkbox(
-                      value: _isPriority,
-                      onChanged: (value) {
-                        setState(() {
-                          _isPriority = value!;
-                        });
-                      },
-                    ),
-                    Text('Priority', style: TextStyle(fontSize: 14)),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+          SizedBox(height: 10),
+          Row(
+            children: [
+              Checkbox(
+                value: _isPriority,
+                onChanged: (value) {
+                  setState(() {
+                    _isPriority = value!;
+                  });
+                },
+              ),
+              Text('Priority'),
+            ],
+          ),
+        ],
       ),
       actions: [
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Cancel', style: TextStyle(color: Colors.red)),
+          child: Text('Cancel'),
         ),
-        ElevatedButton(
+        TextButton(
           onPressed: () {
             if (_taskController.text.isEmpty || _selectedDateTime == null)
               return;
@@ -93,11 +86,6 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             Provider.of<TaskProvider>(context, listen: false).addTask(newTask);
             Navigator.of(context).pop();
           },
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
           child: Text('Add Task'),
         ),
       ],
@@ -118,7 +106,12 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       );
       if (time != null) {
         return DateTime(
-            date.year, date.month, date.day, time.hour, time.minute);
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
       }
     }
     return null;

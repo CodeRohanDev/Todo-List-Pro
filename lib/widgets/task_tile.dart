@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,76 +14,103 @@ class TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateFormat dateFormat = DateFormat('MMM dd, HH:mm:ss');
-    final String formattedDateTime = dateFormat.format(task.dateTime);
-
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        leading: Icon(
-          task.isPriority ? Icons.star : Icons.star_border,
-          color: task.isPriority ? Colors.amber : Colors.grey,
-        ),
         title: Text(
           task.title,
           style: TextStyle(
-            fontSize: 18.0,
+            decoration: task.isCompleted ? TextDecoration.lineThrough : null,
             fontWeight: FontWeight.bold,
-            decoration: task.isDone ? TextDecoration.lineThrough : null,
+            letterSpacing: 1.5,
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Due: $formattedDateTime',
-              style: TextStyle(
-                fontSize: 14.0,
-                color: task.isPriority ? Colors.red : Colors.black,
+              DateFormat('dd-MM-yyyy HH:mm')
+                  .format(task.dateTime), // Format date and time
+            ),
+            if (task.progress != null) // Check if progress is not null
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LinearProgressIndicator(
+                    value: task.progress,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: _getProgressColor(task.progress),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "${(task.progress * 100).toInt()}%", // Display percentage
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
               ),
-            ),
-            LinearProgressIndicator(
-              value: task.progress,
-              backgroundColor: Colors.grey[200],
-              color: task.isPriority ? Colors.red : Colors.blue,
-            ),
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        trailing: Wrap(
+          spacing: 12,
           children: [
-            Checkbox(
-              value: task.isDone,
-              onChanged: task.isDone
-                  ? null // Disable the checkbox if the task is done
-                  : (value) {
-                      Provider.of<TaskProvider>(context, listen: false)
-                          .toggleTaskStatus(task);
-                    },
-            ),
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: task.isDone
-                  ? null // Disable the edit button if the task is done
-                  : () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            EditTaskDialog(task: task),
-                      );
-                    },
-            ),
+            _buildEditButton(context),
+            _buildCheckbox(context),
           ],
         ),
-        onLongPress: () {
-          Provider.of<TaskProvider>(context, listen: false).removeTask(task);
-        },
       ),
     );
+  }
+
+  Widget _buildEditButton(BuildContext context) {
+    if (task.isCompleted || task.isExpired) {
+      return IconButton(
+        icon: Icon(Icons.edit),
+        onPressed: null, // Disable edit button
+      );
+    } else {
+      return IconButton(
+        icon: Icon(Icons.edit),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => EditTaskDialog(task: task),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildCheckbox(BuildContext context) {
+    if (task.isCompleted || task.isExpired) {
+      return Checkbox(
+        value: task.isCompleted,
+        onChanged: null, // Disable checkbox
+      );
+    } else {
+      return Checkbox(
+        value: task.isCompleted,
+        onChanged: (value) {
+          task.isCompleted = value!;
+          Provider.of<TaskProvider>(context, listen: false).updateTask(task);
+        },
+      );
+    }
+  }
+
+  Animation<Color?>? _getProgressColor(double progress) {
+    if (progress >= 1.0) {
+      return AlwaysStoppedAnimation<Color>(
+          Colors.green); // Green color when progress is 100%
+    } else if (progress >= 0.6) {
+      return AlwaysStoppedAnimation<Color>(
+          Colors.lightGreen); // Light green color for 60-99% progress
+    } else if (progress >= 0.3) {
+      return AlwaysStoppedAnimation<Color>(
+          Colors.yellow); // Yellow color for 30-59% progress
+    } else {
+      return AlwaysStoppedAnimation<Color>(
+          Colors.red); // Red color for less than 30% progress
+    }
   }
 }

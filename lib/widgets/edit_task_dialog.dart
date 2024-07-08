@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list_pro/models/task.dart';
@@ -71,5 +73,26 @@ class _EditTaskDialogState extends State<EditTaskDialog> {
         ),
       ],
     );
+  }
+
+  Future<DateTime?> _selectDateTime(BuildContext context) async {
+    DateTime now = DateTime.now();
+    final DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(2101),
+    );
+    if (date != null) {
+      final TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (time != null) {
+        return DateTime(
+            date.year, date.month, date.day, time.hour, time.minute);
+      }
+    }
+    return null;
   }
 }
